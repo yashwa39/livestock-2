@@ -1,316 +1,609 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>portfolio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Source+Code+Pro:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <!-- CRT Scanlines Overlay -->
-    <div class="scanlines"></div>
-    <div class="screen-flicker"></div>
-    <div class="crt-vignette"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Shed Dashboard • Livestock Monitoring</title>
+    <meta
+      name="description"
+      content="A premium smart livestock shed monitoring dashboard for IoT sensor data, RFID animal tracking, alerts, analytics, and visual monitoring."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Manrope:wght@300..800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#dashboard">Skip to dashboard</a>
 
-    <!-- Background Music Player (hidden, controlled from Config screen) -->
-    <audio id="bgMusic" loop preload="auto" style="display: none;">
-        <!-- Primary: Use your own music file (bgmusic.mp3) for best experience -->
-        <source src="bgmusic.mp3" type="audio/mpeg">
-        <!-- Fallback: Royalty-free synthwave track from Pixabay -->
-        <!-- Download from: https://pixabay.com/music/search/synthwave/ -->
-        <source src="https://cdn.pixabay.com/download/audio/2023/10/27/audio_8a5f8e5c0c.mp3?filename=cyberpunk-synthwave-123456.mp3" type="audio/mpeg">
-    </audio>
+    <header class="topbar" role="banner">
+      <div class="topbar__inner">
+        <div class="brand">
+          <div class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6.2 14.9c2.6-1.7 5.2-2.5 7.8-2.5 2.6 0 4.7.5 6.2 1.3"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+              <path
+                d="M5.2 9.2c2.7-2.7 5.7-4.1 9-4.1 2.8 0 5.4 1.1 7.9 3.3"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+              <path
+                d="M12 21.2c3.7 0 6.7-3 6.7-6.7 0-3.7-3-6.7-6.7-6.7-3.7 0-6.7 3-6.7 6.7 0 3.7 3 6.7 6.7 6.7Z"
+                stroke="currentColor"
+                stroke-width="1.6"
+              />
+              <path
+                d="M10.1 14.7h3.8"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <div class="brand__text">
+            <div class="brand__title">Smart Shed</div>
+            <div class="brand__subtitle">Livestock Monitoring System</div>
+          </div>
+        </div>
 
-    <!-- Main Container -->
-    <div class="arcade-container">
-        <!-- Main Menu Screen -->
-        <section id="main-menu" class="screen active">
-            <div class="welcome-content">
-                <h1 class="main-title">
-                    <span class="title-text">YASH SINGH</span>
-                    <span class="blinking-cursor">_</span>
-                </h1>
-                <p class="subtitle">arcade portfolio</p>
-                <button class="arcade-button start-button" data-target="player-select">
-                    <span class="button-text">PRESS START</span>
-                    <span class="button-glow"></span>
+        <nav class="nav" aria-label="Primary">
+          <a class="nav__link" href="#dashboard">Dashboard</a>
+          <a class="nav__link" href="#shed">Shed Monitoring</a>
+          <a class="nav__link" href="#tracking">Animal Tracking</a>
+          <a class="nav__link" href="#rfid">RFID</a>
+          <a class="nav__link" href="#analytics">Analytics</a>
+          <a class="nav__link" href="#alerts">Alerts</a>
+          <a class="nav__link" href="#reports">Reports</a>
+        </nav>
+
+        <div class="topbar__right">
+          <div class="status-pill" id="systemStatus" aria-live="polite">
+            <span class="status-pill__dot" aria-hidden="true"></span>
+            <span class="status-pill__label">System: Online</span>
+          </div>
+          <button class="icon-btn" id="tsSettingsBtn" type="button">ThingSpeak Settings</button>
+          <button class="icon-btn" id="syncBtn" type="button" aria-pressed="true">Sync: On</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="page" role="main">
+      <section class="hero" aria-label="Overview">
+        <div class="hero__bg" aria-hidden="true"></div>
+        <div class="hero__inner">
+          <div class="hero__copy">
+            <div class="kicker">IoT • RFID • Environmental Safety</div>
+            <h1 class="hero__title">
+              A premium, real-time dashboard for smarter livestock shed health.
+            </h1>
+            <p class="hero__desc">
+              Monitor temperature, humidity, gas safety, ventilation, and animal presence in a
+              single elegant interface—built for presentation and real deployment.
+            </p>
+            <div class="hero__meta">
+              <div class="meta-chip">
+                <div class="meta-chip__label">Shed Health</div>
+                <div class="meta-chip__value" id="shedHealthValue">92%</div>
+              </div>
+              <div class="meta-chip">
+                <div class="meta-chip__label">Last Update</div>
+                <div class="meta-chip__value" id="lastUpdateValue">—</div>
+              </div>
+              <div class="meta-chip">
+                <div class="meta-chip__label">Active Tags</div>
+                <div class="meta-chip__value" id="activeTagsValue">12</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero__glance" aria-label="Critical glance metrics">
+            <div class="glance grid-2">
+              <article class="card card--metric" data-metric="temp">
+                <div class="card__top">
+                  <div class="card__title">Temperature</div>
+                  <div class="badge" id="tempBadge">Normal</div>
+                </div>
+                <div class="metric">
+                  <div class="metric__value">
+                    <span id="tempValue">29.6</span><span class="metric__unit">°C</span>
+                  </div>
+                  <div class="metric__sub">
+                    Daily avg <span id="tempAvg">—</span> • High <span id="tempHigh">—</span> • Low
+                    <span id="tempLow">—</span>
+                  </div>
+                </div>
+                <div class="mini-chart">
+                  <canvas id="tempChart" aria-label="Temperature trend chart" role="img"></canvas>
+                </div>
+              </article>
+
+              <article class="card card--metric" data-metric="humidity">
+                <div class="card__top">
+                  <div class="card__title">Humidity</div>
+                  <div class="badge" id="humidityBadge">Optimal</div>
+                </div>
+                <div class="metric">
+                  <div class="metric__value">
+                    <span id="humidityValue">61</span><span class="metric__unit">%</span>
+                  </div>
+                  <div class="metric__sub">
+                    Comfort <span id="humidityComfort">—</span> • Weekly trend
+                    <span id="humidityWeekly">—</span>
+                  </div>
+                </div>
+                <div class="mini-chart">
+                  <canvas id="humidityChart" aria-label="Humidity trend chart" role="img"></canvas>
+                </div>
+              </article>
+
+              <article class="card card--metric" data-metric="gas">
+                <div class="card__top">
+                  <div class="card__title">Gas / Air Quality</div>
+                  <div class="badge badge--warn" id="gasBadge">Safe</div>
+                </div>
+                <div class="metric">
+                  <div class="metric__value">
+                    <span id="gasValue">184</span><span class="metric__unit">ppm</span>
+                  </div>
+                  <div class="metric__sub">
+                    Status <span id="gasStatus">—</span> • Log entries <span id="gasLogCount">—</span>
+                  </div>
+                </div>
+                <div class="mini-chart">
+                  <canvas id="gasChart" aria-label="Gas trend chart" role="img"></canvas>
+                </div>
+              </article>
+
+              <article class="card card--metric" data-metric="shed">
+                <div class="card__top">
+                  <div class="card__title">Shed Condition</div>
+                  <div class="badge badge--ok" id="shedBadge">Healthy</div>
+                </div>
+                <div class="metric">
+                  <div class="metric__value">
+                    <span id="shedHealthLarge">92</span><span class="metric__unit">%</span>
+                  </div>
+                  <div class="metric__sub">
+                    Ventilation <span id="ventValue">—</span> • Comfort score
+                    <span id="comfortScore">—</span>
+                  </div>
+                </div>
+                <div class="progress">
+                  <div class="progress__bar" aria-hidden="true">
+                    <div class="progress__fill" id="shedProgressFill"></div>
+                  </div>
+                  <div class="progress__labels">
+                    <span>0</span><span>50</span><span>100</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="dashboard" aria-label="Home dashboard">
+        <div class="section__head">
+          <h2 class="section__title">Home Dashboard</h2>
+          <p class="section__desc">
+            Real-time environmental telemetry, health scoring, and quick actions.
+          </p>
+        </div>
+
+        <div class="grid grid-3">
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Ventilation</div>
+              <div class="badge" id="ventBadge">Balanced</div>
+            </div>
+            <div class="split">
+              <div class="stat">
+                <div class="stat__label">Airflow</div>
+                <div class="stat__value"><span id="airflowValue">—</span><span class="unit">%</span></div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">Fans</div>
+                <div class="stat__value"><span id="fansValue">—</span><span class="unit">On</span></div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">CO₂ proxy</div>
+                <div class="stat__value"><span id="co2Value">—</span><span class="unit">ppm</span></div>
+              </div>
+            </div>
+            <div class="hint">
+              Auto-control adjusts fan intensity based on humidity and gas safety thresholds.
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Daily Summary</div>
+              <div class="badge badge--ok">Stable</div>
+            </div>
+            <div class="split">
+              <div class="stat">
+                <div class="stat__label">RFID scans</div>
+                <div class="stat__value" id="dailyScansValue">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">Alerts today</div>
+                <div class="stat__value" id="dailyAlertsValue">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">Occupancy</div>
+                <div class="stat__value"><span id="occupancyValue">—</span><span class="unit">%</span></div>
+              </div>
+            </div>
+            <div class="hint">A clean snapshot for reports and project presentations.</div>
+          </article>
+
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">System Health</div>
+              <div class="badge badge--ok" id="uptimeBadge">Nominal</div>
+            </div>
+            <div class="split">
+              <div class="stat">
+                <div class="stat__label">Uptime</div>
+                <div class="stat__value" id="uptimeValue">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">Packets</div>
+                <div class="stat__value" id="packetsValue">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">Latency</div>
+                <div class="stat__value"><span id="latencyValue">—</span><span class="unit">ms</span></div>
+              </div>
+            </div>
+            <div class="hint">Live data source: ThingSpeak channel feed (polling).</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="shed" aria-label="Shed monitoring">
+        <div class="section__head">
+          <h2 class="section__title">Shed Monitoring</h2>
+          <p class="section__desc">Comfort scoring and safety states based on thresholds.</p>
+        </div>
+        <div class="grid grid-2">
+          <article class="card card--wide">
+            <div class="card__top">
+              <div class="card__title">Comfort Score</div>
+              <div class="badge badge--ok" id="comfortBadge">Livestock-friendly</div>
+            </div>
+            <div class="comfort">
+              <div class="comfort__ring" aria-hidden="true">
+                <svg viewBox="0 0 120 120">
+                  <defs>
+                    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="var(--accent)" />
+                      <stop offset="55%" stop-color="var(--aqua)" />
+                      <stop offset="100%" stop-color="var(--amber)" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="60" cy="60" r="46" class="ring-bg" />
+                  <circle cx="60" cy="60" r="46" class="ring-fg" id="comfortRing" />
+                </svg>
+                <div class="comfort__center">
+                  <div class="comfort__value" id="comfortValue">—</div>
+                  <div class="comfort__label">Comfort</div>
+                </div>
+              </div>
+              <div class="comfort__list">
+                <div class="row">
+                  <div class="row__k">Temperature score</div>
+                  <div class="row__v" id="tempScore">—</div>
+                </div>
+                <div class="row">
+                  <div class="row__k">Humidity score</div>
+                  <div class="row__v" id="humScore">—</div>
+                </div>
+                <div class="row">
+                  <div class="row__k">Gas safety score</div>
+                  <div class="row__v" id="gasScore">—</div>
+                </div>
+                <div class="row">
+                  <div class="row__k">Ventilation status</div>
+                  <div class="row__v" id="ventStatus">—</div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Historical Log</div>
+              <div class="badge" id="logBadge">Auto</div>
+            </div>
+            <div class="log" role="log" aria-live="polite" aria-relevant="additions" id="eventLog"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="tracking" aria-label="Animal tracking and monitoring">
+        <div class="section__head">
+          <h2 class="section__title">Livestock Monitoring</h2>
+          <p class="section__desc">
+            RFID-based identification, presence zones, movement logs, and animal profiles.
+          </p>
+        </div>
+
+        <div class="grid grid-2">
+          <article class="card" id="rfid">
+            <div class="card__top">
+              <div class="card__title">RFID Animal Monitoring Panel</div>
+              <div class="badge badge--ok" id="rfidBadge">Ready</div>
+            </div>
+            <div class="rfid">
+              <div class="rfid__input">
+                <label class="label" for="rfidInput">RFID Scan Input</label>
+                <div class="input-row">
+                  <input
+                    id="rfidInput"
+                    class="input"
+                    inputmode="latin"
+                    autocomplete="off"
+                    placeholder="Scan or type tag ID (e.g., AHC-1024)"
+                  />
+                  <button class="btn" id="scanBtn" type="button">Scan</button>
+                </div>
+                <div class="rfid__meta">
+                  <div class="mini">
+                    <div class="mini__k">Tag ID</div>
+                    <div class="mini__v" id="tagIdValue">—</div>
+                  </div>
+                  <div class="mini">
+                    <div class="mini__k">Last scanned</div>
+                    <div class="mini__v" id="lastScannedValue">—</div>
+                  </div>
+                  <div class="mini">
+                    <div class="mini__k">Location</div>
+                    <div class="mini__v" id="animalLocationValue">—</div>
+                  </div>
+                  <div class="mini">
+                    <div class="mini__k">Timestamp</div>
+                    <div class="mini__v" id="scanTimestampValue">—</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rfid__history">
+                <div class="subhead">
+                  <div class="subhead__title">Scan history</div>
+                  <button class="text-btn" id="clearHistoryBtn" type="button">Clear</button>
+                </div>
+                <div class="history" id="scanHistory" aria-label="RFID scan history"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Live Animal Presence Map</div>
+              <div class="badge" id="mapBadge">Zones</div>
+            </div>
+            <div class="map">
+              <div class="map__legend" aria-label="Map legend">
+                <span class="legend-item"><span class="legend-dot dot--feed"></span>Feeding</span>
+                <span class="legend-item"><span class="legend-dot dot--water"></span>Water</span>
+                <span class="legend-item"><span class="legend-dot dot--rest"></span>Resting</span>
+                <span class="legend-item"><span class="legend-dot dot--entry"></span>Entrance</span>
+              </div>
+              <svg class="shed-svg" viewBox="0 0 640 360" role="img" aria-label="Top-view shed layout">
+                <defs>
+                  <linearGradient id="shedGlow" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="rgba(115,255,199,0.25)" />
+                    <stop offset="100%" stop-color="rgba(115,166,255,0.18)" />
+                  </linearGradient>
+                </defs>
+
+                <rect x="18" y="18" width="604" height="324" rx="22" fill="url(#shedGlow)" stroke="rgba(255,255,255,0.16)" />
+
+                <rect x="36" y="44" width="210" height="126" rx="18" class="zone zone--rest" />
+                <text x="52" y="78" class="zone-label">Resting</text>
+
+                <rect x="266" y="44" width="356" height="126" rx="18" class="zone zone--feed" />
+                <text x="282" y="78" class="zone-label">Feeding</text>
+
+                <rect x="36" y="190" width="356" height="132" rx="18" class="zone zone--water" />
+                <text x="52" y="224" class="zone-label">Water Zone</text>
+
+                <rect x="412" y="190" width="210" height="132" rx="18" class="zone zone--entry" />
+                <text x="428" y="224" class="zone-label">Entrance / Exit</text>
+
+                <g id="animalDots" aria-hidden="true"></g>
+              </svg>
+              <div class="map__hint">
+                Positions will appear when your ThingSpeak feed includes zone/presence fields.
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="section__subhead">
+          <h3 class="section__subtitle">Animal Profile Cards</h3>
+          <div class="section__actions">
+            <button class="btn btn--ghost" id="refreshNowBtn" type="button">Refresh now</button>
+          </div>
+        </div>
+
+        <div class="grid grid-3" id="animalCards" aria-label="Animal profiles"></div>
+      </section>
+
+      <section class="section" id="alerts" aria-label="Alerts and notifications">
+        <div class="section__head">
+          <h2 class="section__title">Alerts & Notifications</h2>
+          <p class="section__desc">Animated warnings for hazards, anomalies, and tag events.</p>
+        </div>
+
+        <div class="grid grid-3" id="alertsGrid" aria-label="Active alerts"></div>
+      </section>
+
+      <section class="section" id="analytics" aria-label="Analytics">
+        <div class="section__head">
+          <h2 class="section__title">Analytics</h2>
+          <p class="section__desc">Premium, animated charts and operational insights.</p>
+        </div>
+
+        <div class="grid grid-2">
+          <article class="card card--chart">
+            <div class="card__top">
+              <div class="card__title">Sensor Trends</div>
+              <div class="badge">24h</div>
+            </div>
+            <div class="chart-box">
+              <canvas id="trendChart" aria-label="Temperature, humidity and gas trends chart" role="img"></canvas>
+            </div>
+          </article>
+
+          <article class="card card--chart">
+            <div class="card__top">
+              <div class="card__title">RFID Attendance</div>
+              <div class="badge">Daily</div>
+            </div>
+            <div class="chart-box">
+              <canvas id="attendanceChart" aria-label="RFID attendance chart" role="img"></canvas>
+            </div>
+          </article>
+
+          <article class="card card--chart">
+            <div class="card__top">
+              <div class="card__title">Daily Occupancy</div>
+              <div class="badge">Live</div>
+            </div>
+            <div class="chart-box">
+              <canvas id="occupancyChart" aria-label="Occupancy chart" role="img"></canvas>
+            </div>
+          </article>
+
+          <article class="card card--chart">
+            <div class="card__top">
+              <div class="card__title">Livestock Activity Heatmap</div>
+              <div class="badge">Zones</div>
+            </div>
+            <div class="heatmap" id="heatmap" aria-label="Activity heatmap"></div>
+            <div class="hint">Heatmap updates only from your ThingSpeak occupancy/activity fields.</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="camera" aria-label="Camera and visual monitoring">
+        <div class="section__head">
+          <h2 class="section__title">Camera / Visual Monitoring</h2>
+          <p class="section__desc">Live feed placeholder, snapshots, and activity timeline.</p>
+        </div>
+
+        <div class="grid grid-2">
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Live Camera Feed</div>
+              <div class="badge">Placeholder</div>
+            </div>
+            <div class="camera">
+              <div class="camera__screen" aria-label="Camera feed placeholder">
+                <div class="camera__overlay">
+                  <div class="camera__tag">CAM-01 • Shed A</div>
+                  <div class="camera__rec"><span aria-hidden="true"></span>LIVE</div>
+                </div>
+                <div class="camera__grid" aria-hidden="true"></div>
+              </div>
+              <div class="hint">Embed RTSP/WebRTC stream here when available.</div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Snapshots</div>
+              <div class="badge">Last 6</div>
+            </div>
+            <div class="gallery" id="snapshotGallery" aria-label="Snapshot gallery"></div>
+            <div class="timeline" aria-label="Activity timeline">
+              <div class="timeline__head">
+                <div class="timeline__title">Activity timeline</div>
+                <button
+                  class="text-btn"
+                  id="addSnapshotBtn"
+                  type="button"
+                  disabled
+                  title="Connect camera snapshots via your backend"
+                >
+                  Add snapshot
                 </button>
-                <div class="terminal-prompt">
-                    <span class="prompt-text">> ACCESS TERMINAL</span>
-                </div>
+              </div>
+              <div class="timeline__list" id="activityTimeline"></div>
             </div>
-        </section>
+          </article>
+        </div>
+      </section>
 
-        <!-- Player Select Screen -->
-        <section id="player-select" class="screen">
-            <div class="screen-header">
-                <h2 class="section-title">[PLAYER SELECT]</h2>
-                <button class="back-button" data-target="main-menu">← BACK</button>
+      <section class="section" id="reports" aria-label="Reports">
+        <div class="section__head">
+          <h2 class="section__title">Reports</h2>
+          <p class="section__desc">
+            Export-friendly summaries for college presentations and real operations.
+          </p>
+        </div>
+        <div class="grid grid-3">
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Generate PDF</div>
+              <div class="badge">Soon</div>
             </div>
-            <div class="player-content">
-                <div class="profile-section">
-                    <div class="profile-image-container">
-                        <img src="profile.jpg" alt="Profile" class="profile-image pixelated">
-                        <div class="image-border"></div>
-                    </div>
-                    <div class="character-stats">
-                        <h3 class="stats-title">CHARACTER STATS</h3>
-                        <div class="stat-bar">
-                            <span class="stat-label">Python</span>
-                            <div class="stat-progress">
-                                <div class="stat-fill" data-level="70" style="width: 70%"></div>
-                                <span class="stat-value">Level 70</span>
-                            </div>
-                        </div>
-                        <div class="stat-bar">
-                            <span class="stat-label">HTML</span>
-                            <div class="stat-progress">
-                                <div class="stat-fill" data-level="80" style="width: 80%"></div>
-                                <span class="stat-value">Level 80</span>
-                            </div>
-                        </div>
-                        <div class="stat-bar">
-                            <span class="stat-label">Laravel</span>
-                            <div class="stat-progress">
-                                <div class="stat-fill" data-level="30" style="width: 30%"></div>
-                                <span class="stat-value">Level 30</span>
-                            </div>
-                        </div>
-                        <div class="stat-bar">
-                            <span class="stat-label">UI/UX</span>
-                            <div class="stat-progress">
-                                <div class="stat-fill" data-level="80" style="width: 80%"></div>
-                                <span class="stat-value">Level 80</span>
-                            </div>
-                        </div>
-                        <div class="stat-bar">
-                            <span class="stat-label">Designing</span>
-                            <div class="stat-progress">
-                                <div class="stat-fill" data-level="90" style="width: 90%"></div>
-                                <span class="stat-value">Level 90</span>
-                            </div>
-                        </div>
-                        <div class="stat-bar">
-                            <span class="stat-label">Sketching</span>
-                            <div class="stat-progress">
-                                <div class="stat-fill" data-level="80" style="width: 80%"></div>
-                                <span class="stat-value">Level 80</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bio-section">
-                    <h3 class="bio-title">SYSTEM LOG</h3>
-                    <div class="bio-content">
-                        <p class="log-entry">> INITIALIZING PROFILE...</p>
-                        <p class="log-entry">> STATUS: ACTIVE DEVELOPER</p>
-                        <p class="log-entry">> SPECIALIZATION: FULL-STACK DEVELOPMENT</p>
-                        <p class="log-entry">> CURRENT MISSION: BUILDING INNOVATIVE WEB SOLUTIONS</p>
-                        <p class="log-entry">> LOCATION: REMOTE / GLOBAL</p>
-                        <p class="log-entry">> EXPERIENCE: 5+ YEARS IN PRODUCTION</p>
-                        <p class="log-entry">> PASSION: CREATING ELEGANT CODE & USER EXPERIENCES</p>
-                    </div>
-                </div>
+            <p class="p">
+              Print-ready layout: sensor stats, alerts, attendance, and a timestamped summary.
+            </p>
+            <button class="btn btn--ghost" type="button" id="printBtn">Print / Save PDF</button>
+          </article>
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Export CSV</div>
+              <div class="badge">Soon</div>
             </div>
-            <nav class="screen-nav">
-                <button class="nav-button" data-target="quest-log">QUEST LOG →</button>
-            </nav>
-        </section>
+            <p class="p">Download logs and trends to analyze in Excel or Google Sheets.</p>
+            <button class="btn btn--ghost" type="button" id="exportBtn">Export demo CSV</button>
+          </article>
+          <article class="card">
+            <div class="card__top">
+              <div class="card__title">Integration Notes</div>
+              <div class="badge">MQTT / REST</div>
+            </div>
+            <p class="p">
+              Hook `script.js` into your ESP32/Arduino pipeline: MQTT (Mosquitto), Firebase, or a
+              Node API.
+            </p>
+            <a class="btn btn--ghost" href="#dashboard">Back to dashboard</a>
+          </article>
+        </div>
+      </section>
+    </main>
 
-        <!-- Quest Log Screen -->
-        <section id="quest-log" class="screen">
-            <div class="screen-header">
-                <h2 class="section-title">[QUEST LOG]</h2>
-                <button class="back-button" data-target="player-select">← BACK</button>
-            </div>
-            <div class="projects-grid">
-                <div class="project-card" data-difficulty="legendary">
-                    <div class="card-header">
-                        <span class="difficulty-badge legendary">LEGENDARY</span>
-                        <h3 class="project-title">E-Commerce Platform</h3>
-                    </div>
-                    <div class="project-thumbnail">
-                        <div class="thumbnail-placeholder">PROJECT 01</div>
-                    </div>
-                    <p class="project-description">Full-stack e-commerce solution with real-time inventory management and payment processing.</p>
-                    <div class="project-tech">
-                        <span class="tech-tag">React</span>
-                        <span class="tech-tag">Node.js</span>
-                        <span class="tech-tag">MongoDB</span>
-                    </div>
-                </div>
-                <div class="project-card" data-difficulty="hard">
-                    <div class="card-header">
-                        <span class="difficulty-badge hard">HARD</span>
-                        <h3 class="project-title">Real-Time Chat App</h3>
-                    </div>
-                    <div class="project-thumbnail">
-                        <div class="thumbnail-placeholder">PROJECT 02</div>
-                    </div>
-                    <p class="project-description">WebSocket-based messaging application with end-to-end encryption and file sharing.</p>
-                    <div class="project-tech">
-                        <span class="tech-tag">Socket.io</span>
-                        <span class="tech-tag">Express</span>
-                        <span class="tech-tag">Redis</span>
-                    </div>
-                </div>
-                <div class="project-card" data-difficulty="hard">
-                    <div class="card-header">
-                        <span class="difficulty-badge hard">HARD</span>
-                        <h3 class="project-title">Task Management System</h3>
-                    </div>
-                    <div class="project-thumbnail">
-                        <div class="thumbnail-placeholder">PROJECT 03</div>
-                    </div>
-                    <p class="project-description">Collaborative project management tool with drag-and-drop interface and analytics dashboard.</p>
-                    <div class="project-tech">
-                        <span class="tech-tag">Vue.js</span>
-                        <span class="tech-tag">Django</span>
-                        <span class="tech-tag">PostgreSQL</span>
-                    </div>
-                </div>
-                <div class="project-card" data-difficulty="casual">
-                    <div class="card-header">
-                        <span class="difficulty-badge casual">CASUAL</span>
-                        <h3 class="project-title">Portfolio Website</h3>
-                    </div>
-                    <div class="project-thumbnail">
-                        <div class="thumbnail-placeholder">PROJECT 04</div>
-                    </div>
-                    <p class="project-description">Interactive portfolio with retro arcade aesthetic and smooth animations.</p>
-                    <div class="project-tech">
-                        <span class="tech-tag">HTML5</span>
-                        <span class="tech-tag">CSS3</span>
-                        <span class="tech-tag">JavaScript</span>
-                    </div>
-                </div>
-            </div>
-            <nav class="screen-nav">
-                <button class="nav-button" data-target="high-scores">HIGH SCORES →</button>
-            </nav>
-        </section>
+    <footer class="footer" role="contentinfo">
+      <div class="footer__inner">
+        <div>
+          <div class="footer__title">Smart Animal Shed Monitoring System</div>
+          <div class="footer__sub">Dark + earthy glass UI • Charts • RFID • Alerts</div>
+        </div>
+        <div class="footer__right">
+          <span class="footer__chip">DHT11</span>
+          <span class="footer__chip">MQ Sensor</span>
+          <span class="footer__chip">RFID</span>
+          <span class="footer__chip">ThingSpeak</span>
+        </div>
+      </div>
+    </footer>
 
-        <!-- High Scores Screen -->
-        <section id="high-scores" class="screen">
-            <div class="screen-header">
-                <h2 class="section-title">[HIGH SCORES]</h2>
-                <button class="back-button" data-target="quest-log">← BACK</button>
-            </div>
-            <div class="scores-table-container">
-                <table class="scores-table">
-                    <thead>
-                        <tr>
-                            <th>RANK</th>
-                            <th>INITIALS</th>
-                            <th>SCORE</th>
-                            <th>LEVEL REACHED</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="score-row">
-                            <td class="rank">#1</td>
-                            <td class="initials">UNIVERSITY</td>
-                            <td class="score">2025-2029</td>
-                            <td class="level">Not Graduated</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <nav class="screen-nav">
-                <button class="nav-button" data-target="config">CONFIG →</button>
-            </nav>
-        </section>
-
-        <!-- Config/Contact Screen -->
-        <section id="config" class="screen">
-            <div class="screen-header">
-                <h2 class="section-title">[CONFIG / EXIT]</h2>
-                <button class="back-button" data-target="high-scores">← BACK</button>
-            </div>
-            <div class="config-content">
-                <div class="contact-section">
-                    <h3 class="contact-title">TERMINAL COMMANDS</h3>
-                    <div class="terminal-commands">
-                        <a href="mailto:your.email@example.com" class="terminal-link">
-                            <span class="command-prompt">></span>
-                            <span class="command-text">EMAIL</span>
-                            <span class="command-result">opens mail client</span>
-                        </a>
-                        <a href="https://github.com" target="_blank" class="terminal-link">
-                            <span class="command-prompt">></span>
-                            <span class="command-text">GITHUB</span>
-                            <span class="command-result">opens repository</span>
-                        </a>
-                        <a href="https://linkedin.com" target="_blank" class="terminal-link">
-                            <span class="command-prompt">></span>
-                            <span class="command-text">LINKEDIN</span>
-                            <span class="command-result">opens profile</span>
-                        </a>
-                        <a href="https://twitter.com" target="_blank" class="terminal-link">
-                            <span class="command-prompt">></span>
-                            <span class="command-text">TWITTER</span>
-                            <span class="command-result">opens feed</span>
-                        </a>
-                    </div>
-                </div>
-                <div class="jukebox-section">
-                    <h3 class="jukebox-title">SOUNDTRACK CONFIG</h3>
-                    <div class="bg-music-controls">
-                        <div class="music-control-panel">
-                            <div class="control-row">
-                                <span class="control-label">BACKGROUND MUSIC:</span>
-                                <button id="bgMusicToggle" class="arcade-button small-button">
-                                    <span class="button-text" id="musicStatus">PLAY</span>
-                                </button>
-                            </div>
-                            <div class="control-row">
-                                <span class="control-label">VOLUME:</span>
-                                <div class="volume-control-panel">
-                                    <input type="range" id="bgVolumeSlider" min="0" max="100" value="50" class="volume-slider-panel">
-                                    <span class="volume-value" id="volumeValue">50%</span>
-                                </div>
-                            </div>
-                            <div class="music-info">
-                                <p class="info-text">> TRACK: CYBER-SYNTH WAVEFORM</p>
-                                <p class="info-text">> STATUS: <span id="trackStatus">READY</span></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="screen-settings">
-                        <h3 class="settings-title">SCREEN SETTINGS</h3>
-                        <div class="settings-panel">
-                            <div class="control-row">
-                                <span class="control-label">COLOR THEME:</span>
-                                <div class="theme-buttons">
-                                    <button class="theme-button active" data-theme="cyan" title="Neon Blue">BLUE</button>
-                                    <button class="theme-button" data-theme="green" title="Neon Green">GREEN</button>
-                                    <button class="theme-button" data-theme="red" title="High Contrast Red">RED</button>
-                                </div>
-                            </div>
-                            <div class="control-row">
-                                <span class="control-label">SCANLINES:</span>
-                                <button id="scanlineToggle" class="arcade-button small-button">
-                                    <span class="button-text" id="scanlineStatus">ON</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="spotify-embed-container" style="margin-top: 2rem;">
-                        <h4 class="playlist-title">EXTERNAL PLAYLIST</h4>
-                        <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZEVXdhFpNs4gXkQ5?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-                    </div>
-                </div>
-            </div>
-            <nav class="screen-nav">
-                <button class="nav-button" data-target="main-menu">RETURN TO MENU</button>
-            </nav>
-        </section>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+    <script src="./script.js"></script>
+  </body>
 </html>
 

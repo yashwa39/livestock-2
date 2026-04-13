@@ -1,0 +1,87 @@
+*
+!.gitignore
+!README.md
+!index.html
+!styles.css
+!script.js
+
+# Allow optional single-file demos in repo root
+!smart-livestock-hub.html
+
+# OS cruft (kept for clarity; already covered by '*')
+.DS_Store
+.CFUserTextEncoding
+
+# Node / frontend tooling
+node_modules/
+dist/
+build/
+.parcel-cache/
+.vite/
+.next/
+.turbo/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# OS / IDE
+.idea/
+
+# Safety: this repo appears at ~ (home). Ignore common home folders.
+Applications/
+Autodesk/
+Desktop/
+Documents/
+Downloads/
+Library/
+Movies/
+Music/
+Pictures/
+Public/
+Templates/
+
+# Safety: ignore common user config dotfolders/files
+.Trash/
+.antigravity/
+.anaconda/
+.android/
+.arduinoIDE/
+.bash_profile
+.cache/
+.codex/
+.composer/
+.conda/
+.condarc
+.config/
+.continuum/
+.cursor/
+.emulator_console_auth_token
+.expo/
+.gemini/
+.gitconfig
+.gradle/
+.ipython/
+.local/
+.matplotlib/
+.npm/
+.oracle_jre_usage/
+.spyder-py3/
+.streamlit/
+.tcshrc
+.viminfo
+.vscode/
+.xonshrc
+.zsh_history
+.zsh_sessions/
+.zshrc
+
