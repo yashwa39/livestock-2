@@ -40,11 +40,13 @@ The default mapping is in `script.js` under `DEFAULT_TS.fields`:
 - `field1`: temperature (°C)
 - `field2`: humidity (%)
 - `field3`: gas (ppm)
-- `field4`: airflow (%)
-- `field5`: RFID tag
-- `field6`: RFID zone/location
-- `field7`: occupancy (%)
-- `field8`: RFID scans today (count)
+- `field4`: RFID tag
+
+Optional (if you add extra fields later):
+- airflow (%)
+- RFID zone/location
+- occupancy (%)
+- RFID scans today (count)
 
 If your channel uses different fields, update that mapping.
 

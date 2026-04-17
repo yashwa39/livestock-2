@@ -35,19 +35,21 @@ function safeText(v, fallback = "—") {
 // Set your channel + field mapping in the UI (ThingSpeak Settings).
 //
 const DEFAULT_TS = {
-  channelId: "",
+  channelId: "3333656",
   readApiKey: "ABD77S4O63FSBBG5",
   results: 60,
-  // Map your ThingSpeak fields here (numbers 1..8)
+  // Your 4-field ThingSpeak setup:
+  // field1=temp, field2=humidity, field3=gas, field4=rfid
   fields: {
     temperatureC: 1,
     humidityPct: 2,
     gasPpm: 3,
-    airflowPct: 4,
-    rfidTag: 5,
-    rfidZone: 6,
-    occupancyPct: 7,
-    rfidScansToday: 8,
+    rfidTag: 4,
+    // Optional fields (if you later add them to channel)
+    airflowPct: null,
+    rfidZone: null,
+    occupancyPct: null,
+    rfidScansToday: null,
   },
 };
 
@@ -56,11 +58,14 @@ function loadTsConfig() {
     const raw = localStorage.getItem("smartShed.ts");
     if (!raw) return { ...DEFAULT_TS, fields: { ...DEFAULT_TS.fields } };
     const parsed = JSON.parse(raw);
-    return {
+    const merged = {
       ...DEFAULT_TS,
       ...parsed,
       fields: { ...DEFAULT_TS.fields, ...(parsed.fields || {}) },
     };
+    if (!merged.channelId) merged.channelId = DEFAULT_TS.channelId;
+    if (!merged.readApiKey) merged.readApiKey = DEFAULT_TS.readApiKey;
+    return merged;
   } catch {
     return { ...DEFAULT_TS, fields: { ...DEFAULT_TS.fields } };
   }
@@ -201,9 +206,9 @@ function comfortScore() {
   const t = state.tempC;
   const h = state.humidity;
   const g = state.gasPpm;
-  const v = state.airflow;
+  const v = state.airflow == null ? 70 : state.airflow;
 
-  if (t == null || h == null || g == null || v == null) {
+  if (t == null || h == null || g == null) {
     return { tScore: 0, hScore: 0, gScore: 0, vScore: 0, overall: 0 };
   }
 
@@ -767,33 +772,73 @@ async function fetchThingSpeak() {
     state.humidity = lastHum;
     state.gasPpm = lastGas;
 
-    // Optional: airflow / occupancy / scans
-    const airflowSeries = feeds.map((x) => toNum(x[`field${f.airflowPct}`]));
-    const occSeries = feeds.map((x) => toNum(x[`field${f.occupancyPct}`]));
-    const scansToday = [...feeds]
-      .reverse()
-      .map((x) => toNum(x[`field${f.rfidScansToday}`]))
-      .find((x) => x != null);
+    // Optional fields (if present in channel)
+    const airflowSeries =
+      f.airflowPct != null ? feeds.map((x) => toNum(x[`field${f.airflowPct}`])) : [];
+    const occSeries =
+      f.occupancyPct != null ? feeds.map((x) => toNum(x[`field${f.occupancyPct}`])) : [];
+    const scansToday =
+      f.rfidScansToday != null
+        ? [...feeds]
+            .reverse()
+            .map((x) => toNum(x[`field${f.rfidScansToday}`]))
+            .find((x) => x != null)
+        : null;
 
-    state.airflow = [...airflowSeries].reverse().find((x) => x != null);
-    state.occupancyPct = [...occSeries].reverse().find((x) => x != null);
+    state.airflow = airflowSeries.length
+      ? [...airflowSeries].reverse().find((x) => x != null)
+      : null;
+    state.occupancyPct = occSeries.length
+      ? [...occSeries].reverse().find((x) => x != null)
+      : null;
     if (scansToday != null) state.scansToday = Math.round(scansToday);
 
-    // Derived system values
+    // Derived system values (from real fields)
+    if (state.airflow == null && state.gasPpm != null) {
+      // estimate ventilation score from gas concentration if no direct airflow field
+      state.airflow = clamp(100 - Math.max(0, state.gasPpm - 120) * 0.2, 35, 95);
+    }
     state.fansOn = state.airflow == null ? null : state.airflow > 70 ? 3 : state.airflow > 52 ? 2 : 1;
     state.co2Proxy = state.gasPpm == null ? null : clamp(520 + (state.gasPpm - 140) * 1.7, 420, 1600);
-    state.activeTags = null; // optional, requires a dedicated field/log
 
-    // RFID last tag / zone (optional)
+    // RFID from field4 (+ optional zone field)
     const lastFeed = feeds[feeds.length - 1];
-    const tag = safeText(lastFeed[`field${f.rfidTag}`], "");
-    const zone = safeText(lastFeed[`field${f.rfidZone}`], "");
+    const rfidSeries = feeds
+      .map((x) => ({
+        tag: safeText(x[`field${f.rfidTag}`], ""),
+        time: x.created_at ? new Date(x.created_at) : now(),
+      }))
+      .filter((x) => x.tag);
+    const tag = rfidSeries.length ? rfidSeries[rfidSeries.length - 1].tag : "";
+    const zone =
+      f.rfidZone != null ? safeText(lastFeed[`field${f.rfidZone}`], "") : "Inside Shed";
     if (tag) state.lastTag = tag;
     if (zone) state.lastZone = zone;
 
+    // build RFID scan history from recent entries
+    state.scanHistory = rfidSeries
+      .slice(-20)
+      .reverse()
+      .map((x) => ({
+        tag: x.tag,
+        animal: `Tag ${x.tag}`,
+        status: "Inside Shed",
+        location: state.lastZone || "Inside Shed",
+        time: fmtTime(x.time),
+      }));
+    renderHistory();
+
+    // count RFID entries today when dedicated count field is absent
+    if (scansToday == null) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      state.scansToday = rfidSeries.filter((x) => x.time >= today).length;
+    }
+    state.activeTags = new Set(rfidSeries.map((x) => x.tag)).size || null;
+
     // Update RFID panel UI from ThingSpeak (read-only)
     setText("#tagIdValue", safeText(state.lastTag));
-    setText("#lastScannedValue", safeText(state.lastTag ? "Tag received" : "—"));
+    setText("#lastScannedValue", safeText(state.lastTag ? `Tag ${state.lastTag}` : "—"));
     setText("#animalLocationValue", safeText(state.lastZone));
     setText("#scanTimestampValue", lastFeed.created_at ? fmtStamp(new Date(lastFeed.created_at)) : "—");
 
