@@ -13,7 +13,8 @@ const fmtStamp = (d) =>
     minute: "2-digit",
   });
 const SNAPSHOT_KEY = "smartShed.snapshots";
-const STREAM_URL = "http://10.144.9.139";
+const CAMERA_URL_KEY = "smartShed.cameraUrl";
+const DEFAULT_CAMERA_URL = "http://10.144.9.139";
 
 function now() {
   return new Date();
@@ -471,6 +472,21 @@ function saveSnapshots(list) {
   localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(list.slice(0, 30)));
 }
 
+function loadCameraUrl() {
+  try {
+    const raw = localStorage.getItem(CAMERA_URL_KEY);
+    if (!raw) return DEFAULT_CAMERA_URL;
+    const url = raw.trim();
+    return url || DEFAULT_CAMERA_URL;
+  } catch {
+    return DEFAULT_CAMERA_URL;
+  }
+}
+
+function saveCameraUrl(url) {
+  localStorage.setItem(CAMERA_URL_KEY, url);
+}
+
 function renderSnapshots() {
   const g = $("#snapshotGallery");
   const shots = loadSnapshots().slice(0, 6);
@@ -524,6 +540,25 @@ function captureCurrentFrame() {
     }
     addLog("warn", "Capture blocked", "Enable CORS on camera stream or proxy through backend");
     addTimeline("Snapshot blocked", "CORS restriction from camera stream");
+  }
+}
+
+function applyCameraStreamUrl() {
+  const streamEl = $("#cameraStream");
+  const streamBadge = $("#streamBadge");
+  const hint = $("#streamHint");
+  if (!streamEl) return;
+
+  const cameraUrl = loadCameraUrl();
+  streamEl.src = cameraUrl;
+  if (hint) hint.textContent = `Stream source: ${cameraUrl}`;
+  if (streamBadge) streamBadge.textContent = "Connecting";
+
+  if (window.location.protocol === "https:" && cameraUrl.startsWith("http://")) {
+    if (hint) {
+      hint.textContent =
+        `Mixed content blocked on HTTPS. Set an HTTPS proxy URL in Camera URL settings. Current: ${cameraUrl}`;
+    }
   }
 }
 
@@ -967,6 +1002,7 @@ function setupActions() {
   const addSnapshotBtn = $("#addSnapshotBtn");
   const captureBtn = $("#captureStreamBtn");
   const openStreamBtn = $("#openStreamBtn");
+  const cameraSettingsBtn = $("#cameraSettingsBtn");
   const streamEl = $("#cameraStream");
 
   // Disable local scan input (ThingSpeak-only)
@@ -994,19 +1030,33 @@ function setupActions() {
   refreshBtn.addEventListener("click", () => fetchThingSpeak());
   addSnapshotBtn.addEventListener("click", captureCurrentFrame);
   captureBtn.addEventListener("click", captureCurrentFrame);
-  openStreamBtn.addEventListener("click", () => window.open(STREAM_URL, "_blank", "noopener,noreferrer"));
+  openStreamBtn.addEventListener("click", () =>
+    window.open(loadCameraUrl(), "_blank", "noopener,noreferrer")
+  );
+  cameraSettingsBtn.addEventListener("click", () => {
+    const nextUrl = prompt(
+      "Camera stream URL (use HTTPS proxy URL when dashboard is hosted on HTTPS):",
+      loadCameraUrl()
+    );
+    if (nextUrl == null) return;
+    const cleaned = nextUrl.trim();
+    if (!cleaned) return;
+    saveCameraUrl(cleaned);
+    applyCameraStreamUrl();
+    addLog("ok", "Camera URL updated", cleaned);
+  });
 
   if (streamEl) {
-    streamEl.src = STREAM_URL;
+    applyCameraStreamUrl();
     streamEl.addEventListener("load", () => {
       const hint = $("#streamHint");
-      if (hint) hint.textContent = `Stream connected: ${STREAM_URL}`;
+      if (hint) hint.textContent = `Stream connected: ${loadCameraUrl()}`;
       const streamBadge = $("#streamBadge");
       if (streamBadge) streamBadge.textContent = "Connected";
     });
     streamEl.addEventListener("error", () => {
       const hint = $("#streamHint");
-      if (hint) hint.textContent = `Unable to display ${STREAM_URL}. Check camera network access.`;
+      if (hint) hint.textContent = `Unable to display ${loadCameraUrl()}. Check camera network/proxy access.`;
       const streamBadge = $("#streamBadge");
       if (streamBadge) streamBadge.textContent = "Unavailable";
     });

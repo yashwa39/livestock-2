@@ -8,7 +8,7 @@ Includes:
 - **RFID animal tracking**: scan input, history, animal profile cards, live zone map
 - **Alerts & notifications**: animated warning cards
 - **Analytics**: elegant animated charts + activity heatmap
-- **Camera section**: live feed placeholder + snapshots + activity timeline
+- **Camera section**: live feed + snapshots + activity timeline
 
 ## Run
 
@@ -49,4 +49,32 @@ Optional (if you add extra fields later):
 - RFID scans today (count)
 
 If your channel uses different fields, update that mapping.
+
+## Camera stream setup
+
+The dashboard camera panel now supports:
+- live stream URL
+- capture photo to local gallery
+- persistent snapshots via browser localStorage
+- configurable camera URL from the **Camera URL** button
+
+### Important for GitHub Pages / HTTPS
+
+If your dashboard is on `https://` and camera is `http://10.x.x.x`, browsers block it (mixed content).
+
+Use an HTTPS proxy URL in **Camera URL** settings.
+
+### Optional local proxy (Node.js)
+
+Use `camera-proxy-server.js` to proxy your camera stream:
+
+```bash
+CAMERA_URL="http://10.144.9.139" node camera-proxy-server.js
+```
+
+Proxy endpoints:
+- `http://localhost:8787/camera-proxy`
+- `http://localhost:8787/health`
+
+Then set **Camera URL** in dashboard to your proxy URL (for example `http://localhost:8787/camera-proxy` for local testing, or your deployed HTTPS proxy URL for production).
 

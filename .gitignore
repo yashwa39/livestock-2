@@ -4,6 +4,7 @@
 !index.html
 !styles.css
 !script.js
+!camera-proxy-server.js
 
 # Allow optional single-file demos in repo root
 !smart-livestock-hub.html
