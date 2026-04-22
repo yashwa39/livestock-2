@@ -3,7 +3,7 @@ const https = require("https");
 const { URL } = require("url");
 
 const PORT = Number(process.env.PORT || 8787);
-const CAMERA_URL = process.env.CAMERA_URL || "http://10.144.9.139";
+const CAMERA_URL = process.env.CAMERA_URL || "https://plain-eyes-sell.loca.lt/camera-proxy";
 
 function pickClient(url) {
   return url.protocol === "https:" ? https : http;
