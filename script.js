@@ -12,6 +12,8 @@ const fmtStamp = (d) =>
     hour: "2-digit",
     minute: "2-digit",
   });
+const SNAPSHOT_KEY = "smartShed.snapshots";
+const STREAM_URL = "http://10.144.9.139";
 
 function now() {
   return new Date();
@@ -453,6 +455,78 @@ function clearSnapshotsUi() {
   g.appendChild(el);
 }
 
+function loadSnapshots() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) => item && item.image && item.time).slice(0, 30);
+  } catch {
+    return [];
+  }
+}
+
+function saveSnapshots(list) {
+  localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(list.slice(0, 30)));
+}
+
+function renderSnapshots() {
+  const g = $("#snapshotGallery");
+  const shots = loadSnapshots().slice(0, 6);
+  g.innerHTML = "";
+  if (!shots.length) {
+    clearSnapshotsUi();
+    return;
+  }
+  shots.forEach((shot, idx) => {
+    const el = document.createElement("div");
+    el.className = "shot";
+    el.innerHTML = `
+      <img src="${shot.image}" alt="Stream snapshot ${idx + 1}" class="camera__stream" />
+      <div class="shot__meta"><span>CAPTURED</span><span>${shot.time}</span></div>
+    `;
+    g.appendChild(el);
+  });
+}
+
+function saveSnapshot(imageDataUrl) {
+  const existing = loadSnapshots();
+  const next = [{ image: imageDataUrl, time: fmtStamp(now()) }, ...existing].slice(0, 30);
+  saveSnapshots(next);
+  renderSnapshots();
+}
+
+function captureCurrentFrame() {
+  const streamEl = $("#cameraStream");
+  if (!streamEl || !streamEl.complete) {
+    addLog("warn", "Capture failed", "Stream is not ready yet");
+    addTimeline("Snapshot failed", "Stream not ready");
+    return;
+  }
+  const w = streamEl.naturalWidth || streamEl.clientWidth || 640;
+  const h = streamEl.naturalHeight || streamEl.clientHeight || 360;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(streamEl, 0, 0, w, h);
+  try {
+    const shot = canvas.toDataURL("image/jpeg", 0.92);
+    saveSnapshot(shot);
+    addLog("ok", "Photo captured", "Current stream frame stored locally");
+    addTimeline("Snapshot captured", "Saved to dashboard gallery");
+  } catch {
+    const hint = $("#streamHint");
+    if (hint) {
+      hint.textContent =
+        "Cannot capture due to browser security (CORS). Enable CORS on stream server or use backend proxy.";
+    }
+    addLog("warn", "Capture blocked", "Enable CORS on camera stream or proxy through backend");
+    addTimeline("Snapshot blocked", "CORS restriction from camera stream");
+  }
+}
+
 function updateUI() {
   // header chips
   $("#lastUpdateValue").textContent = state.lastFeedAt ? fmtTime(new Date(state.lastFeedAt)) : "—";
@@ -890,6 +964,10 @@ function setupActions() {
   const syncBtn = $("#syncBtn");
   const settingsBtn = $("#tsSettingsBtn");
   const refreshBtn = $("#refreshNowBtn");
+  const addSnapshotBtn = $("#addSnapshotBtn");
+  const captureBtn = $("#captureStreamBtn");
+  const openStreamBtn = $("#openStreamBtn");
+  const streamEl = $("#cameraStream");
 
   // Disable local scan input (ThingSpeak-only)
   input.setAttribute("disabled", "true");
@@ -914,6 +992,25 @@ function setupActions() {
   });
 
   refreshBtn.addEventListener("click", () => fetchThingSpeak());
+  addSnapshotBtn.addEventListener("click", captureCurrentFrame);
+  captureBtn.addEventListener("click", captureCurrentFrame);
+  openStreamBtn.addEventListener("click", () => window.open(STREAM_URL, "_blank", "noopener,noreferrer"));
+
+  if (streamEl) {
+    streamEl.src = STREAM_URL;
+    streamEl.addEventListener("load", () => {
+      const hint = $("#streamHint");
+      if (hint) hint.textContent = `Stream connected: ${STREAM_URL}`;
+      const streamBadge = $("#streamBadge");
+      if (streamBadge) streamBadge.textContent = "Connected";
+    });
+    streamEl.addEventListener("error", () => {
+      const hint = $("#streamHint");
+      if (hint) hint.textContent = `Unable to display ${STREAM_URL}. Check camera network access.`;
+      const streamBadge = $("#streamBadge");
+      if (streamBadge) streamBadge.textContent = "Unavailable";
+    });
+  }
 
   settingsBtn.addEventListener("click", () => {
     // Simple, dependency-free configuration flow.
@@ -960,6 +1057,7 @@ function boot() {
   ensureEmptyCharts();
   heatmapInit();
   clearSnapshotsUi();
+  renderSnapshots();
 
   addLog("ok", "System initialized", "Source: ThingSpeak only");
   addTimeline("Dashboard started", "Waiting for ThingSpeak data");

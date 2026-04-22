@@ -508,17 +508,28 @@
           <article class="card">
             <div class="card__top">
               <div class="card__title">Live Camera Feed</div>
-              <div class="badge">Placeholder</div>
+              <div class="badge" id="streamBadge">Live Stream</div>
             </div>
             <div class="camera">
-              <div class="camera__screen" aria-label="Camera feed placeholder">
+              <div class="camera__screen" aria-label="Live camera stream">
+                <img
+                  id="cameraStream"
+                  class="camera__stream"
+                  src="http://10.144.9.139"
+                  alt="Live shed camera stream"
+                  referrerpolicy="no-referrer"
+                  crossorigin="anonymous"
+                />
                 <div class="camera__overlay">
                   <div class="camera__tag">CAM-01 • Shed A</div>
                   <div class="camera__rec"><span aria-hidden="true"></span>LIVE</div>
                 </div>
-                <div class="camera__grid" aria-hidden="true"></div>
               </div>
-              <div class="hint">Embed RTSP/WebRTC stream here when available.</div>
+              <div class="camera__actions">
+                <button class="btn" id="captureStreamBtn" type="button">Capture photo</button>
+                <button class="btn btn--ghost" id="openStreamBtn" type="button">Open stream</button>
+              </div>
+              <div class="hint" id="streamHint">Stream source: http://10.144.9.139</div>
             </div>
           </article>
 
@@ -535,8 +546,7 @@
                   class="text-btn"
                   id="addSnapshotBtn"
                   type="button"
-                  disabled
-                  title="Connect camera snapshots via your backend"
+                  title="Capture and store a stream snapshot"
                 >
                   Add snapshot
                 </button>
